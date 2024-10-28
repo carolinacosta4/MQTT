@@ -1,4 +1,5 @@
 let mqttClient;
+let userId = `user_${Math.random().toString(36).substring(2, 15)}`; // Generate a unique user ID
 
 window.addEventListener("load", (event) => {
   connectToBroker();
@@ -16,7 +17,7 @@ window.addEventListener("load", (event) => {
 
 function connectToBroker() {
   const clientId = "client" + Math.random().toString(36).substring(7);
-  const host = "ws://mqtt.eclipseprojects.io:80/mqtt"; // Endereço do broker MQTT
+  const host = "ws://mqtt.eclipseprojects.io:80/mqtt"; // Address of the MQTT broker
 
   const options = {
     keepalive: 60,
@@ -43,9 +44,11 @@ function connectToBroker() {
     console.log("Client connected: " + clientId);
   });
 
-  // Recebendo mensagens
+  // Receiving messages
   mqttClient.on("message", (topic, message, packet) => {
-    console.log("Received Message: " + message.toString() + "\nOn topic: " + topic);
+    console.log(
+      "Received Message: " + message.toString() + "\nOn topic: " + topic
+    );
     const messageTextArea = document.querySelector("#message");
     messageTextArea.value += `${message}\r\n`;
   });
@@ -62,16 +65,8 @@ function subscribeToTopic() {
 
   console.log(`Subscribing to Topic: ${topic}`);
 
-  mqttClient.subscribe(topic, { qos: 0 }, (err) => {
-    if (err) {
-      console.error(`Failed to subscribe to ${topic}:`, err);
-      status.style.color = "red";
-      status.value = `ERROR: ${err.message}`;
-    } else {
-      status.style.color = "green";
-      status.value = "SUBSCRIBED";
-    }
-  });
+  // Use the updated method to handle queues in MQTTService
+  mqttClient.subscribeWithQueue(topic, userId, { qos: 0 });
 }
 
 function unsubscribeFromTopic() {

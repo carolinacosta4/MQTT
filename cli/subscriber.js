@@ -1,6 +1,6 @@
 const mqtt = require("mqtt");
 
-var mqttClient;
+let mqttClient;
 
 // Change this to point to your MQTT broker or DNS name
 const mqttHost = "mqtt.eclipseprojects.io";
@@ -26,7 +26,7 @@ function connectToBroker() {
   mqttClient = mqtt.connect(hostURL, options);
 
   mqttClient.on("error", (err) => {
-    console.log("Error: ", err);
+    console.error("Error: ", err);
     mqttClient.end();
   });
 
@@ -35,11 +35,18 @@ function connectToBroker() {
   });
 
   mqttClient.on("connect", () => {
-    console.log("Client connected:" + clientId);
+    console.log("Client connected: " + clientId);
+
+    // Subscribe to a specific topic (you can change this to your desired topic)
+    const topic = "your/topic"; // Change to your queue topic
+    subscribeToTopic(topic);
+
+    // Publish the clientId to the subscribed topic to request a queue number
+    mqttClient.publish(topic, clientId);
   });
 
   // Received Message
-  mqttClient.on("message", (topic, message, packet) => {
+  mqttClient.on("message", (topic, message) => {
     console.log(
       "Received Message: " + message.toString() + "\nOn topic: " + topic
     );
@@ -49,8 +56,13 @@ function connectToBroker() {
 function subscribeToTopic(topic) {
   console.log(`Subscribing to Topic: ${topic}`);
 
-  mqttClient.subscribe(topic, { qos: 0 });
+  mqttClient.subscribe(topic, { qos: 0 }, (err) => {
+    if (err) {
+      console.error(`Failed to subscribe to ${topic}:`, err);
+    } else {
+      console.log(`Successfully subscribed to ${topic}`);
+    }
+  });
 }
 
 connectToBroker();
-subscribeToTopic("temperature");
