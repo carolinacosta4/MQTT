@@ -1,27 +1,23 @@
 <template>
   <div>
     <h2 v-if="queueStore.selectedRoute">Atendente - Gerenciamento de {{ queueStore.selectedRoute }}</h2>
-    <button 
-      v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]"
-      @click="queueStore.callNextTicket(queueStore.selectedRoute)" 
-      :disabled="!queueStore.sectors[queueStore.selectedRoute].clients.length"
-    >
+    <button v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]"
+      @click="queueStore.callNextTicket(this.$route.params.service)" :disabled="!serviceQueue.length">
       Chamar Próxima Senha
     </button>
     <p v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-      Senha atual chamada na {{ queueStore.selectedRoute }}: 
+      Senha atual chamada na {{ queueStore.selectedRoute }}:
       {{ queueStore.sectors[queueStore.selectedRoute].currentTicket }}
     </p>
     <ul v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-      <li v-for="client in queueStore.sectors[queueStore.selectedRoute].clients" :key="client">{{ client }}</li>
+      <li v-for="client in serviceQueue" :key="client">{{ client }}</li>
     </ul>
     <p v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-      Total Clients in {{ queueStore.selectedRoute }}: {{ queueStore.sectors[queueStore.selectedRoute].clients.length }}
+      Total Clients in {{ queueStore.selectedRoute }}: {{ serviceQueue.length }}
     </p>
     <p v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-      Total Clients in secretaria: {{ queueStore.sectors.secretaria.clients.length }}
+      Total Clients in NextIn: {{ total }}
     </p>
-    <p>{{ total }}</p>
   </div>
 </template>
 
@@ -42,6 +38,7 @@ export default {
     if (route) {
       this.queueStore.subscribeToClients(route);
       this.queueStore.selectedRoute = route;
+      this.queueStore.fetchQueueDataPerService(route)
     }
   },
 
@@ -49,9 +46,28 @@ export default {
     this.queueStore.disconnect();
   },
 
+  created() {
+    this.queueStore.fetchQueueDataPerService(this.$route.params.service);
+    this.queueStore.fetchTotalUsers()
+  },
+
   computed: {
     total() {
       return this.queueStore.getTotalTickets;
+    },
+
+    serviceQueue() {
+      return this.queueStore.getClients
+    },
+
+    total(){
+      return this.queueStore.getTotal
+    }
+  },
+
+  watch: {
+    serviceQueue() {
+      this.queueStore.fetchQueueDataPerService(this.queueStore.selectedRoute);
     },
   },
 }

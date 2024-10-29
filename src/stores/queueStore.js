@@ -1,5 +1,8 @@
 import { defineStore } from "pinia";
 import mqttService from "@/services/mqttService";
+import * as api from "../api/api";
+
+const API_BASE_URL = "http://127.0.0.1:3000";
 
 export const useQueueStore = defineStore("queueStore", {
   state: () => ({
@@ -16,10 +19,14 @@ export const useQueueStore = defineStore("queueStore", {
     currentClientTicket: "",
     isSubscribed: false,
     totalTicketsIssued: 0,
+    queueService: [],
+    totalUsers: 0,
   }),
 
   getters: {
     getTotalTickets: (state) => state.totalTicketsIssued,
+    getClients: (state) => state.queueService,
+    getTotal: (state) => state.totalUsers,
   },
 
   actions: {
@@ -34,32 +41,62 @@ export const useQueueStore = defineStore("queueStore", {
       this.connected = false;
     },
 
-    subscribeClient(route) {
+    async subscribeClient(route) {
       this.selectedRoute = route;
-      const clientTopic = `fila/${route}/senha_cliente`;
+      try {
+        const response = await api.post(API_BASE_URL, `tickets/issue`, {
+          route: route,
+        });
 
-      const clientTicket = this.sectors[route].clients.length + 1;
-      this.currentClientTicket = clientTicket;
-      mqttService.publish(clientTopic, clientTicket.toString());
+        const clientTicket = response.ticketNumber;
+        this.currentClientTicket = clientTicket;
+        this.sectors[route].clients.push(clientTicket);
 
-      const topic = `fila/${route}/senha_atual`;
-      mqttService.subscribe(topic, (message) => {
-        this.sectors[route].currentTicket = parseInt(message);
-      });
+        const topic = `fila/${route}/senha_atual`;
+        mqttService.subscribe(topic, (message) => {
+          this.sectors[route].currentTicket = parseInt(message);
+        });
 
-      this.isSubscribed = true;
-      this.totalTicketsIssued += 1;
+        this.isSubscribed = true;
+        this.totalTicketsIssued += 1;
+      } catch (error) {
+        console.error(error);
+      }
     },
 
-    callNextTicket(route) {
-      if (this.sectors[route].clients.length > 0) {
-        this.sectors[route].currentTicket = this.sectors[route].clients[0];
+    async callNextTicket(route) {
+      try {
+        const response = await api.post(API_BASE_URL, `tickets/call`, {
+          route: route,
+        });
+
+        const nextTicket = response.data.nextTicket;
+        this.sectors[route].currentTicket = nextTicket;
         const topic = `fila/${route}/senha_atual`;
-        mqttService.publish(
-          topic,
-          this.sectors[route].currentTicket.toString()
-        );
+        mqttService.publish(topic, nextTicket.toString());
         this.sectors[route].clients.shift();
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
+    async fetchTotalUsers() {
+      try {
+        const response = await api.get(API_BASE_URL, `tickets`);
+        for (const key in response) {
+          this.totalUsers += response[key].clients.length;
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
+    async fetchQueueDataPerService(route) {
+      try {
+        const response = await api.get(API_BASE_URL, `tickets/${route}`);
+        this.queueService = response.clients;
+      } catch (error) {
+        console.error(error);
       }
     },
 
