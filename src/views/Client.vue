@@ -32,17 +32,17 @@
     <button v-if="queueStore.isSubscribed" class="exit-button">
       Exit Line
     </button>
-    <p v-if="queueStore.isSubscribed">
-      <img src="@/assets/logo.svg" class="logo" />
-    </p>
-
     <p
+      class="client-turn"
       v-if="
         formattedClientTicket == formattedCurrentTicket &&
         queueStore.currentClientTicket != 0
       "
     >
       IT'S YOUR TURN!!
+    </p>
+    <p v-if="queueStore.isSubscribed">
+      <img src="@/assets/logo.svg" class="logo" />
     </p>
   </div>
 </template>
@@ -182,7 +182,7 @@ html {
   background-color: #ffffff;
   border-radius: 1rem;
   width: 35rem;
-  height: 40rem;
+  height: 45rem;
 }
 .your-ticket-label {
   padding-top: 3rem;
@@ -216,5 +216,9 @@ html {
   min-height: 3rem;
   border-radius: 0.5rem;
   margin-bottom: 1rem;
+}
+.client-turn {
+  font-size: 1.2rem;
+  color: #20595f;
 }
 </style>
