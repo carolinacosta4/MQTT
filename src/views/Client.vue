@@ -4,11 +4,22 @@
       <img src="@/assets/logo.svg" class="logo" />
       <h2 class="title">Select a service</h2>
       <div class="all-routes">
-        <div v-for="(route, key) in routes" :key="key">
-          <button @click="selectRoute(route.key)" class="single-route">
+        <div v-for="route in queueData">
+          <button @click="selectRoute(route.name)" class="single-route" v-if="route.status == 'open'">
+            {{ route.name }}
+          </button>
+          <button @click="selectRoute(route.name)" class="single-route disabled" disabled v-else>
             {{ route.name }}
           </button>
         </div>
+
+        <!-- <div v-for="(route, key) in routes" :key="key">
+          <button @click="selectRoute(route.key)"
+            :class="['single-route', isServiceClosed(route.key) ? 'disabled' : '']"
+            :disabled="isServiceClosed(route.key)">
+            {{ route.name }}
+          </button>
+        </div> -->
       </div>
     </div>
   </div>
@@ -18,7 +29,7 @@
       {{ formattedClientTicket }}
     </p>
     <p v-if="queueStore.isSubscribed" class="selected-route">
-      {{ queueStore.selectedRoute }}
+      {{ formattedRouteName }}
     </p>
     <p v-if="queueStore.isSubscribed" class="current-ticket-label">
       Current ticket
@@ -29,16 +40,10 @@
     <p v-if="queueStore.isSubscribed" class="dotted">
       ---------------------------------
     </p>
-    <button v-if="queueStore.isSubscribed" class="exit-button">
+    <button v-if="queueStore.isSubscribed" @click="leaveQueue()" class="exit-button">
       Exit Line
     </button>
-    <p
-      class="client-turn"
-      v-if="
-        formattedClientTicket == formattedCurrentTicket &&
-        queueStore.currentClientTicket != 0
-      "
-    >
+    <p class="client-turn" v-if="formattedCurrentTicket == formattedClientTicket">
       IT'S YOUR TURN!!
     </p>
     <p v-if="queueStore.isSubscribed">
@@ -58,17 +63,9 @@ export default {
         { key: "internacional", name: "Internacional", code: "A" },
         { key: "secretaria", name: "Secretaria", code: "B" },
         { key: "direcao", name: "Direção", code: "C" },
-        {
-          key: "centro-producao-recursos",
-          name: "Centro de Produção e Recursos",
-          code: "D",
-        },
+        { key: "centro-producao-recursos", name: "Centro de Produção e Recursos", code: "D" },
         { key: "biblioteca", name: "Biblioteca", code: "E" },
-        {
-          key: "servicos-acao-social",
-          name: "Serviços de Ação Social",
-          code: "F",
-        },
+        { key: "servicos-acao-social", name: "Serviços de Ação Social", code: "F" },
       ],
     };
   },
@@ -89,32 +86,68 @@ export default {
         (route) => route.key === this.queueStore.selectedRoute
       );
       const routeCode = selectedRoute ? selectedRoute.code : "";
-      return `${routeCode}${this.queueStore.sectors[
-        this.queueStore.selectedRoute
-      ].currentTicket
-        .toString()
-        .padStart(2, "0")}`;
+      const currentTicket = this.queueStore.sectors[this.queueStore.selectedRoute].currentTicket;
+      return `${routeCode}${currentTicket.toString().padStart(2, "0")}`;
     },
+
+    formattedRouteName() {
+      return this.routes.find((route) => route.key === this.queueStore.selectedRoute).name
+    },
+
+    // lastTicket() {
+    //   return this.queueStore.getLastTicketCalled
+    //   // const selectedRoute = this.routes.find(
+    //   //   (route) => route.key === this.queueStore.selectedRoute
+    //   // );
+    //   // const routeCode = selectedRoute ? selectedRoute.code : "";
+    //   // return `${routeCode}${this.queueStore.getLastTicketCalled.toString().padStart(2, "0")}`;
+    // },
+
+    queueData(){
+      return this.queueStore.getData
+    }
   },
 
   methods: {
     selectRoute(routeKey) {
       this.queueStore.subscribeClient(routeKey);
       this.queueStore.selectedRoute = routeKey;
+      this.queueStore.fetchQueueDataPerService(this.queueStore.selectedRoute);
     },
+
+    leaveQueue() {
+      this.queueStore.leaveQueue(this.queueStore.selectedRoute, this.queueStore.currentClientTicket)
+    },
+
+    // isServiceClosed(routeKey) {
+    //   return this.queueData.
+    //   return this.queueStore.sectors[routeKey]?.status !== 'open'
+    // }
   },
 
   mounted() {
     if (!this.queueStore.connected) this.queueStore.connect();
+
+    this.queueStore.fetchQueueData();
+
+    this.routes.forEach((route) => {
+      this.queueStore.fetchQueueDataPerService(route.key);
+    });
   },
 
   beforeUnmount() {
     this.queueStore.disconnect();
   },
+
+  watch: {
+    queueData() {
+      this.queueStore.fetchQueueData();
+    },
+  },
 };
 </script>
 
-<style scope>
+<style>
 :root {
   background-color: #307e69 !important;
   width: 100vw !important;
@@ -148,6 +181,7 @@ html {
   padding-bottom: 3rem;
   text-align: center;
 }
+
 .title {
   color: #e7e8e3;
   text-align: center;
@@ -172,6 +206,14 @@ html {
   border: 0;
   border-radius: 1rem;
   font-weight: bold;
+  cursor: pointer;
+}
+
+.disabled {
+  background-color: #cccccc;
+  color: #8a8a8a;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .client-div-subscribed {
@@ -182,32 +224,44 @@ html {
   background-color: #ffffff;
   border-radius: 1rem;
   width: 35rem;
-  height: 45rem;
+  /* height: 45rem; */
 }
+
 .your-ticket-label {
   padding-top: 3rem;
   color: #949983;
 }
+
 .your-ticket {
   font-size: 4rem;
   color: #20595f;
   margin: 0;
+  font-weight: bolder;
 }
+
 .selected-route {
   color: #20595f;
   font-size: 1.3rem;
 }
+
 .current-ticket-label {
   color: #949983;
+  margin-bottom: 0;
+  font-size: 14px;
 }
+
 .current-ticket {
   font-size: 1.2rem;
   color: #20595f;
+  margin-top: 0.5em;
+  font-weight: bold;
 }
+
 .dotted {
   font-size: 2rem;
   color: #20595f;
 }
+
 .exit-button {
   color: #d20505;
   background-color: #e7e8e3;
@@ -217,6 +271,7 @@ html {
   border-radius: 0.5rem;
   margin-bottom: 1rem;
 }
+
 .client-turn {
   font-size: 1.2rem;
   color: #20595f;

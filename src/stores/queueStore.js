@@ -8,25 +8,33 @@ export const useQueueStore = defineStore("queueStore", {
   state: () => ({
     connected: false,
     sectors: {
-      internacional: { clients: [], currentTicket: 0 },
-      secretaria: { clients: [], currentTicket: 0 },
-      direcao: { clients: [], currentTicket: 0 },
-      "centro-producao-recursos": { clients: [], currentTicket: 0 },
-      biblioteca: { clients: [], currentTicket: 0 },
-      "servicos-acao-social": { clients: [], currentTicket: 0 },
+      internacional: { clients: [], currentTicket: 0, status: "open" },
+      secretaria: { clients: [], currentTicket: 0, status: "open" },
+      direcao: { clients: [], currentTicket: 0, status: "open" },
+      "centro-producao-recursos": {
+        clients: [],
+        currentTicket: 0,
+        status: "open",
+      },
+      biblioteca: { clients: [], currentTicket: 0, status: "open" },
+      "servicos-acao-social": { clients: [], currentTicket: 0, status: "open" },
     },
     selectedRoute: "",
     currentClientTicket: "",
     isSubscribed: false,
-    totalTicketsIssued: 0,
     queueService: [],
     totalUsers: 0,
+    lastTicketCalled: 0,
+    status: null,
+    queueData: {}
   }),
 
   getters: {
-    getTotalTickets: (state) => state.totalTicketsIssued,
+    getData: (state) => state.queueData,
     getClients: (state) => state.queueService,
     getTotal: (state) => state.totalUsers,
+    getLastTicketCalled: (state) => state.lastTicketCalled,
+    getStatus: (state) => state.status,
   },
 
   actions: {
@@ -58,7 +66,6 @@ export const useQueueStore = defineStore("queueStore", {
         });
 
         this.isSubscribed = true;
-        this.totalTicketsIssued += 1;
       } catch (error) {
         console.error(error);
       }
@@ -69,11 +76,9 @@ export const useQueueStore = defineStore("queueStore", {
         const response = await api.post(API_BASE_URL, `tickets/call`, {
           route: route,
         });
-
-        const nextTicket = response.data.nextTicket;
-        this.sectors[route].currentTicket = nextTicket;
+        this.sectors[route].currentTicket = response.nextTicket;
         const topic = `fila/${route}/senha_atual`;
-        mqttService.publish(topic, nextTicket.toString());
+        mqttService.publish(topic, response.nextTicket.toString());
         this.sectors[route].clients.shift();
       } catch (error) {
         console.error(error);
@@ -91,10 +96,28 @@ export const useQueueStore = defineStore("queueStore", {
       }
     },
 
+    async fetchQueueData() {
+      try {
+        const response = await api.get(API_BASE_URL, `tickets`);
+        this.queueData = response
+        console.log(this.queueData);
+        
+        return response;
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
     async fetchQueueDataPerService(route) {
       try {
         const response = await api.get(API_BASE_URL, `tickets/${route}`);
         this.queueService = response.clients;
+        this.lastTicketCalled = response.lastTicket;
+        this.status = response.status;
+        this.sectors[route].clients = response.clients;
+        this.sectors[route].currentTicket = response.lastTicket;
+        this.sectors[route].status = response.status;
+        return response;
       } catch (error) {
         console.error(error);
       }
@@ -106,6 +129,55 @@ export const useQueueStore = defineStore("queueStore", {
       mqttService.subscribe(clientTopic, (message) => {
         this.sectors[route].clients.push(parseInt(message));
       });
+    },
+
+    async leaveQueue(route, ticketNumber) {
+      try {
+        const response = await api.post(
+          API_BASE_URL,
+          `tickets/leaveQueue/${route}`,
+          {
+            ticketNumber: ticketNumber,
+          }
+        );
+
+        const topic = `fila/${route}/senha_atual`;
+        mqttService.unsubscribe(topic);
+        this.isSubscribed = false;
+        this.selectedRoute = "";
+        this.currentClientTicket = "";
+
+        return response;
+      } catch (error) {
+        console.error(error);
+      }
+    },
+
+    async finishService(route) {
+      try {
+        const response = await api.remove(
+          API_BASE_URL,
+          `tickets/finishService/${route}`
+        );
+        this.sectors[route].status = 'closed'
+        return response;
+      } catch (error) {
+        console.error(`Erro ao finalizar o serviço para ${route}:`, error);
+      }
+    },
+
+    async startService(route) {
+      try {
+        const response = await api.post(
+          API_BASE_URL,
+          `tickets/startService/${route}`
+        );
+        this.sectors[route].status = 'open'
+
+        return response;
+      } catch (error) {
+        console.error(`Erro ao finalizar o serviço para ${route}:`, error);
+      }
     },
   },
 });

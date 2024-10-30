@@ -40,6 +40,18 @@ class MqttService {
     }
   }
 
+  unsubscribe(topic) {
+    if (this.client) {
+      this.client.unsubscribe(topic, (error) => {
+        if (!error) {
+          console.log(`Cancelada inscrição no tópico: ${topic}`);
+        } else {
+          console.error(`Erro ao cancelar inscrição no tópico: ${topic}`, error);
+        }
+      });
+    }
+  }  
+
   publish(topic, message) {
     if (this.client) {
       this.client.publish(topic, message);
