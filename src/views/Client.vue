@@ -37,9 +37,11 @@
     <p v-if="queueStore.isSubscribed" class="current-ticket">
       {{ formattedCurrentTicket }}
     </p>
-    <p v-if="queueStore.isSubscribed" class="dotted">
-      ---------------------------------
-    </p>
+    <div id="divider" v-if="queueStore.isSubscribed">
+          <span class="dot"></span>
+          <hr>
+          <span class="dot"></span>
+        </div>
     <button v-if="queueStore.isSubscribed" @click="leaveQueue()" class="exit-button">
       Exit Line
     </button>
@@ -147,14 +149,28 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
+@font-face {
+  font-family: "Karla";
+  /* font-style: normal; */
+  /* font-weight: 400; */
+  src: url(https://fonts.gstatic.com/s/karla/v31/qkB9XvYC6trAT55ZBi1ueQVIjQTD-JrIH2G7nytkHRyQ8p4wUjm6bnEr.woff2) format('woff2');
+}
+
+* {
+  font-family: "Karla", sans-serif;
+}
+
+p {
+  font-size: 18px;
+}
+
 :root {
   background-color: #307e69 !important;
   width: 100vw !important;
   height: 100vh !important;
   margin: 0 !important;
   padding: 0 !important;
-  font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 body,
@@ -181,6 +197,7 @@ html {
   padding-bottom: 3rem;
   text-align: center;
 }
+
 
 .title {
   color: #e7e8e3;
@@ -227,10 +244,12 @@ html {
   /* height: 45rem; */
 }
 
+
 .your-ticket-label {
   padding-top: 3rem;
   color: #949983;
 }
+
 
 .your-ticket {
   font-size: 4rem;
@@ -239,16 +258,19 @@ html {
   font-weight: bolder;
 }
 
+
 .selected-route {
   color: #20595f;
   font-size: 1.3rem;
 }
+
 
 .current-ticket-label {
   color: #949983;
   margin-bottom: 0;
   font-size: 14px;
 }
+
 
 .current-ticket {
   font-size: 1.2rem;
@@ -257,10 +279,12 @@ html {
   font-weight: bold;
 }
 
+
 .dotted {
   font-size: 2rem;
   color: #20595f;
 }
+
 
 .exit-button {
   color: #d20505;
@@ -272,8 +296,41 @@ html {
   margin-bottom: 1rem;
 }
 
+#divider {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  padding-top: 2%;
+  padding-bottom: 6%;
+  margin-left: -24px;
+  margin-right: -24px;
+}
+
+.dot {
+  height: 25px;
+  width: 25px;
+  background-color: #307e69;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+hr {
+  border: none;
+  border-top: 6px dotted #307E69;
+  width: 27vw;
+}
+
 .client-turn {
   font-size: 1.2rem;
   color: #20595f;
+}
+
+button {
+
+  font-size: 18px;
+
 }
 </style>
