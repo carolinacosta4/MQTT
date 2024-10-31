@@ -1,7 +1,7 @@
 <template>
   <div class="client-wrapper" v-if="!queueStore.isSubscribed">
     <div class="client-div-unsubscribed">
-      <img src="@/assets/logo.svg" class="logo" />
+      <img src="@/assets/logo.png" class="logo" />
       <h2 class="title">Select a service</h2>
       <div class="all-routes">
         <div v-for="route in queueData">
@@ -25,33 +25,31 @@
   </div>
   <div v-else class="client-wrapper">
     <div class="client-div-subscribed">
-    <p v-if="queueStore.isSubscribed" class="your-ticket-label grey font-wheight-600 text">Your ticket</p>
-    <p v-if="queueStore.isSubscribed" class="your-ticket">
-      {{ formattedClientTicket }}
-    </p>
-    <h2 v-if="queueStore.isSubscribed" class="selected-route">
-      {{ formattedRouteName }}
-    </h2>
-    <p v-if="queueStore.isSubscribed" class="current-ticket-label">
-      Current ticket
-    </p>
-    <p v-if="queueStore.isSubscribed" class="current-ticket">
-      {{ formattedCurrentTicket }}
-    </p>
-    <div id="divider" v-if="queueStore.isSubscribed">
-          <span class="dot"></span>
-          <hr>
-          <span class="dot"></span>
-        </div>
-    <button v-if="queueStore.isSubscribed" @click="leaveQueue()" class="exit-button">
-      Exit Line
-    </button>
-    <p class="client-turn" v-if="formattedCurrentTicket == formattedClientTicket">
-      IT'S YOUR TURN!!
-    </p>
-    <p v-if="queueStore.isSubscribed">
-      <img src="@/assets/logo.svg" class="logo" />
-    </p>
+      <p v-if="queueStore.isSubscribed" class="your-ticket-label grey font-wheight-600 text">Your ticket</p>
+      <p v-if="queueStore.isSubscribed" class="your-ticket">
+        {{ formattedClientTicket }}
+      </p>
+      <h2 v-if="queueStore.isSubscribed" class="selected-route">
+        {{ formattedRouteName }}
+      </h2>
+      <p v-if="queueStore.isSubscribed" class="current-ticket-label">
+        Current ticket
+      </p>
+      <p v-if="queueStore.isSubscribed" class="current-ticket">
+        {{ formattedCurrentTicket }}
+      </p>
+      <div id="divider" v-if="queueStore.isSubscribed">
+        <span class="dot"></span>
+        <hr>
+        <span class="dot"></span>
+      </div>
+      <button v-if="queueStore.isSubscribed" @click="leaveQueue()" class="exit-button">
+        Exit Line
+      </button>
+      <p class="client-turn" v-if="formattedCurrentTicket == formattedClientTicket">
+        IT'S YOUR TURN!!
+      </p>
+      <img src="@/assets/logo.png" class="logoSmall" v-if="queueStore.isSubscribed" />
     </div>
   </div>
 </template>
@@ -107,7 +105,7 @@ export default {
     //   // return `${routeCode}${this.queueStore.getLastTicketCalled.toString().padStart(2, "0")}`;
     // },
 
-    queueData(){
+    queueData() {
       return this.queueStore.getData
     }
   },
@@ -173,7 +171,7 @@ p {
   height: 100vh;
   display: flex;
   align-items: center;
-  justify-content: center;  
+  justify-content: center;
 }
 
 .client-div-unsubscribed {
@@ -184,9 +182,15 @@ p {
 }
 
 .logo {
-  width: 5rem;
-  padding-bottom: 3rem;
+  max-width: 30%;
+  max-height: 10%;
   text-align: center;
+}
+
+.logoSmall {
+  max-width: 20%;
+  max-height: 10%;
+  padding: 2%;
 }
 
 
