@@ -100,7 +100,6 @@ export const useQueueStore = defineStore("queueStore", {
       try {
         const response = await api.get(API_BASE_URL, `tickets`);
         this.queueData = response
-        console.log(this.queueData);
         
         return response;
       } catch (error) {
