@@ -1,7 +1,7 @@
 <template>
   <div id="general">
     <div id="left">
-      <img class="logo" src="../assets/logo.svg" alt="">
+      <img class="logo" src="../assets/logo.png" alt="">
       <div class="row space-between">
         <h2 class="green">Services</h2>
         <div class="row">
@@ -195,6 +195,7 @@ p {
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
+  align-content: center;
 }
 
 #right {
@@ -207,9 +208,9 @@ p {
 }
 
 img.logo {
-  max-width: 50px;
-  max-height: 50px;
-  margin-left: 40%;
+  max-width: 50%;
+  max-height: 20%; 
+  margin-left: 25%;
 }
 
 .row {
