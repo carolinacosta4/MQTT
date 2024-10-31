@@ -1,14 +1,14 @@
 <template>
-  <div v-if="!queueStore.isSubscribed">
+  <div class="client-wrapper" v-if="!queueStore.isSubscribed">
     <div class="client-div-unsubscribed">
       <img src="@/assets/logo.svg" class="logo" />
       <h2 class="title">Select a service</h2>
       <div class="all-routes">
         <div v-for="route in queueData">
-          <button @click="selectRoute(route.name)" class="single-route" v-if="route.status == 'open'">
+          <button @click="selectRoute(route.code)" class="single-route" v-if="route.status == 'open'">
             {{ route.name }}
           </button>
-          <button @click="selectRoute(route.name)" class="single-route disabled" disabled v-else>
+          <button class="single-route disabled" disabled v-else>
             {{ route.name }}
           </button>
         </div>
@@ -23,7 +23,8 @@
       </div>
     </div>
   </div>
-  <div v-else class="client-div-subscribed">
+  <div v-else class="client-wrapper">
+    <div class="client-div-subscribed">
     <p v-if="queueStore.isSubscribed" class="your-ticket-label">Your ticket</p>
     <p v-if="queueStore.isSubscribed" class="your-ticket">
       {{ formattedClientTicket }}
@@ -51,6 +52,7 @@
     <p v-if="queueStore.isSubscribed">
       <img src="@/assets/logo.svg" class="logo" />
     </p>
+    </div>
   </div>
 </template>
 
@@ -165,24 +167,13 @@ p {
   font-size: 18px;
 }
 
-:root {
-  background-color: #307e69 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-body,
-html {
-  margin: 0;
-  padding: 0;
+.client-wrapper {
+  background-color: #307e69;
   width: 100vw;
   height: 100vh;
   display: flex;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  justify-content: center;  
 }
 
 .client-div-unsubscribed {
@@ -237,19 +228,16 @@ html {
   display: flex;
   flex-direction: column;
   align-items: center;
-  align-content: center;
   background-color: #ffffff;
-  border-radius: 1rem;
-  width: 35rem;
+  border-radius: 1.5em;
+  /* width: 35rem; */
   /* height: 45rem; */
 }
-
 
 .your-ticket-label {
   padding-top: 3rem;
   color: #949983;
 }
-
 
 .your-ticket {
   font-size: 4rem;
@@ -258,19 +246,16 @@ html {
   font-weight: bolder;
 }
 
-
 .selected-route {
   color: #20595f;
   font-size: 1.3rem;
 }
-
 
 .current-ticket-label {
   color: #949983;
   margin-bottom: 0;
   font-size: 14px;
 }
-
 
 .current-ticket {
   font-size: 1.2rem;
@@ -279,12 +264,10 @@ html {
   font-weight: bold;
 }
 
-
 .dotted {
   font-size: 2rem;
   color: #20595f;
 }
-
 
 .exit-button {
   color: #d20505;
@@ -294,6 +277,7 @@ html {
   min-height: 3rem;
   border-radius: 0.5rem;
   margin-bottom: 1rem;
+  cursor: pointer;
 }
 
 #divider {
@@ -320,7 +304,7 @@ html {
 hr {
   border: none;
   border-top: 6px dotted #307E69;
-  width: 27vw;
+  width: 30vw;
 }
 
 .client-turn {

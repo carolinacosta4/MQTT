@@ -2,7 +2,6 @@
   <div id="general">
     <div id="left">
       <img class="logo" src="../assets/logo.svg" alt="">
-      <h2 class="green" v-if="queueStore.selectedRoute">Atendente - Gerenciamento de {{ queueStore.selectedRoute }}</h2>
       <div class="row space-between">
         <h2 class="green">Services</h2>
         <div class="row">
@@ -10,108 +9,36 @@
           <p class="text"> {{ total }}</p>
         </div>
       </div>
-
-
-
-      <ul v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-        <li v-for="client in queueStore.sectors[queueStore.selectedRoute].clients" :key="client">{{ client }}</li>
-      </ul>
-      <!-- tirar isso daqui -->
-
       <div id="servicesList">
-        <div class="row space-between paddingLR"
-          v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-          <p class="paddingLeft green">
-            Internacional
-          </p>
-          <div class="row">
-            <img class="icon" src="../assets/user.svg" alt="">
-            <p> {{ queueStore.sectors.internacional.clients.length }}</p>
+        <div v-for="(sector, key) in queueData">
+          <div class="row space-between paddingLR"
+            v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
+            <p class="paddingLeft green">
+              {{ sector.name }}
+            </p>
+            <div class="row">
+              <img class="icon" src="../assets/user.svg" alt="">
+              <p> {{ sector.clients.length }}</p>
+            </div>
           </div>
-        </div>
-
-        <hr class="servicesList">
-
-
-        <div class="row space-between paddingLR"
-          v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-          <p class="paddingLeft green">
-            Secretaria
-          </p>
-          <div class="row">
-            <img class="icon" src="../assets/user.svg" alt="">
-            <p> {{ queueStore.sectors.secretaria.clients.length }}</p>
-          </div>
-        </div>
-
-        <hr class="servicesList">
-
-
-        <div class="row space-between paddingLR"
-          v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-          <p class="paddingLeft green">
-            Direção
-          </p>
-          <div class="row">
-            <img class="icon" src="../assets/user.svg" alt="">
-            <p> {{ queueStore.sectors.direcao.clients.length }}</p>
-          </div>
-        </div>
-
-        <hr class="servicesList">
-
-        <div class="row space-between paddingLR"
-          v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-          <p class="paddingLeft green">
-            CPR
-          </p>
-          <div class="row">
-            <img class="icon" src="../assets/user.svg" alt="">
-            <!-- <p> {{ queueStore.sectors.centro-producao-recursos.clients.length }}</p> -->
-            <p>0</p>
-          </div>
-        </div>
-
-        <hr class="servicesList">
-
-        <div class="row space-between paddingLR"
-          v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-          <p class="paddingLeft green">
-            Biblioteca
-          </p>
-          <div class="row">
-            <img class="icon" src="../assets/user.svg" alt="">
-            <p> {{ queueStore.sectors.biblioteca.clients.length }}</p>
-          </div>
-        </div>
-
-        <hr class="servicesList">
-
-        <div class="row space-between paddingLR"
-          v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-          <p class="paddingLeft green">
-            Serviços ação social
-          </p>
-          <div class="row">
-            <img class="icon" src="../assets/user.svg" alt="">
-            <!-- <p> {{ queueStore.sectors.servicos-acao-social.clients.length }}</p> -->
-            <p>0</p>
-          </div>
+          <hr v-if="key != 'biblioteca'" class="servicesList">
         </div>
       </div>
 
-      <button id="finishServiceButton">Finish service</button>
+      <button id="finishServiceButton" @click="finishService" v-if="status == 'open'">Finish service</button>
+      <button id="startServiceButton" @click="startService" v-if="status == 'closed' && serviceQueue.length == 0">Start service</button>
+      <button id="serviceButton" @click="startService" v-if="status == 'closed' && serviceQueue.length != 0">You have to finish attending the clients</button>
     </div>
-
+    {{serviceQueue}}
     <div id="right">
       <div id="ticketForm">
         <div id="upperPartTicket" class="centerPadding3">
           <p class="grey font-wheight-600 text">Current ticket</p>
           <p class="currentTicketNumber"
             v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-            {{ queueStore.sectors[queueStore.selectedRoute].currentTicket }}
+            {{ lastTicket }}
           </p>
-          <h2 class="green">{{ queueStore.selectedRoute }}</h2>
+          <h2 class="green service">{{ formattedRouteName }}</h2>
         </div>
 
         <div id="divider">
@@ -125,16 +52,14 @@
             <button id="cancelButton" class="minorActionButton font-wheight-700">Cancel</button>
             <button class="minorActionButton font-wheight-700">Recall</button>
           </div>
-          <button id="nextTicketButton" class="font-wheight-700" v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]"
-            @click="queueStore.callNextTicket(queueStore.selectedRoute)"
-            :disabled="!queueStore.sectors[queueStore.selectedRoute].clients.length">
+          <button id="nextTicketButton" class="font-wheight-700"
+            v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]"
+            @click="queueStore.callNextTicket(this.$route.params.service)" :disabled="!serviceQueue.length">
             Next ticket
           </button>
         </div>
       </div>
     </div>
-
-
   </div>
 </template>
 
@@ -145,6 +70,14 @@ export default {
   data() {
     return {
       queueStore: useQueueStore(),
+      routes: [
+        { key: "internacional", name: "Internacional", code: "A" },
+        { key: "secretaria", name: "Secretaria", code: "B" },
+        { key: "direcao", name: "Direção", code: "C" },
+        { key: "centro-producao-recursos", name: "Centro de Produção e Recursos", code: "D" },
+        { key: "biblioteca", name: "Biblioteca", code: "E" },
+        { key: "servicos-acao-social", name: "Serviços de Ação Social", code: "F" },
+      ],
     }
   },
 
@@ -179,16 +112,21 @@ export default {
     },
 
     lastTicket() {
-      return this.queueStore.getLastTicketCalled
+      const routeCode = this.routes.find((route) => route.key === this.queueStore.selectedRoute);
+      return `${routeCode.code}${this.queueStore.getLastTicketCalled.toString().padStart(2, "0")}`;
+    },
+
+    formattedRouteName() {
+      return this.routes.find((route) => route.key === this.queueStore.selectedRoute).name
     },
 
     status() {
       return this.queueStore.status
     },
 
-    queueData(){
+    queueData() {
       return this.queueStore.getData
-    }
+    },
   },
 
   methods: {
@@ -222,15 +160,7 @@ export default {
 }
 
 * {
-	font-family: "Karla", sans-serif;
-}
-
-:root {
-  background-color: #307e69 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  font-family: "Karla", sans-serif;
 }
 
 body,
@@ -242,17 +172,18 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
 }
-p{
+
+p {
   font-size: 18px;
 }
 
 #general {
+  background-color: #307e69 !important;
   display: flex;
   flex-direction: row;
-  height: 100%;
-  width: 100%;
+  height: 100vh;
+  width: 100vw;
   margin: 0;
   padding: 0;
 }
@@ -261,6 +192,9 @@ p{
   width: 25%;
   background-color: #E7E8E3;
   padding: 2%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
 }
 
 #right {
@@ -307,11 +241,11 @@ img.logo {
   color: #307E69;
 }
 
-.font-wheight-600{
+.font-wheight-600 {
   font-weight: 600;
 }
 
-.font-wheight-700{
+.font-wheight-700 {
   font-weight: 700;
 }
 
@@ -356,7 +290,7 @@ img.logo {
 hr {
   border: none;
   border-top: 6px dotted #307E69;
-  width: 25vw;
+  width: 30vw;
 }
 
 .centerPadding3 {
@@ -394,6 +328,18 @@ hr {
   color: white;
   margin-top: 5%;
   font-size: 18px;
+}
+
+#nextTicketButton:disabled {
+  width: 100%;
+  padding: 4%;
+  border: none;
+  border-radius: 10px;
+  background-color: #307E6980;
+  color: white;
+  margin-top: 5%;
+  font-size: 18px;
+  cursor: not-allowed;
 }
 
 #cancelButton {
@@ -434,6 +380,30 @@ hr.servicesList {
   font-size: 18px;
 }
 
+#startServiceButton {
+  padding: 4%;
+  width: 100%;
+  border: none;
+  border-radius: 100px;
+  background-color: #307E69;
+  color: white;
+  margin-top: 8%;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+#serviceButton {
+  padding: 4%;
+  width: 100%;
+  border: none;
+  border-radius: 100px;
+  /* background-color: #307E69; */
+  color: black;
+  margin-top: 8%;
+  font-weight: 700;
+  font-size: 18px;
+}
+
 .minorActionButton {
   background-color: #E7E8E3;
   border-radius: 10px;
@@ -442,5 +412,9 @@ hr.servicesList {
   width: 48%;
   padding: 4%;
   font-size: 18px;
+}
+
+.service {
+  text-align: center;
 }
 </style>
