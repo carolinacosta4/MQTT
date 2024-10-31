@@ -13,7 +13,7 @@
         <div v-for="(sector, key) in queueData">
           <div class="row space-between paddingLR"
             v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-            <p class="paddingLeft green">
+            <p class="green">
               {{ sector.name }}
             </p>
             <div class="row">
