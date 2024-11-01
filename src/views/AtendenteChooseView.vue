@@ -1,7 +1,7 @@
 <template>
     <div class="client-wrapper">
         <div class="client-div-unsubscribed">
-            <img src="@/assets/logo.svg" class="logo" />
+            <img src="@/assets/logo.png" class="logo" />
             <h2 class="title">Selecione um serviço</h2>
             <div class="all-routes">
                 <div v-for="route in queueData" class="single-route">
@@ -128,8 +128,8 @@ p {
 }
 
 .logo {
-    width: 5rem;
-    padding-bottom: 3rem;
+    max-width: 30%;
+  max-height: 10%;
     text-align: center;
 }
 
@@ -164,9 +164,9 @@ p {
     color: #E7E8E3;
     font-weight: bold;
     text-decoration: none;
-    width: 18rem;
-    padding: 1rem;
+    width: 20rem;
     margin: 1rem;
     background-color: #307E69;
+    font-size: 18px;
 }
 </style>
