@@ -1,7 +1,7 @@
 <template>
   <div class="client-wrapper unsubscribed" v-if="!queueStore.isSubscribed">
     <div class="client-div-unsubscribed">
-      <img src="@/assets/logo.svg" class="logo" />
+      <img src="@/assets/logo.png" class="logo" />
       <h2 class="title">Selecione um serviço</h2>
       <div class="all-routes">
         <div v-for="route in queueData">
@@ -25,33 +25,31 @@
   </div>
   <div v-else class="client-wrapper subscribed">
     <div class="client-div-subscribed">
-    <p v-if="queueStore.isSubscribed" class="your-ticket-label">Your ticket</p>
-    <p v-if="queueStore.isSubscribed" class="your-ticket">
-      {{ formattedClientTicket }}
-    </p>
-    <p v-if="queueStore.isSubscribed" class="selected-route">
-      {{ formattedRouteName }}
-    </p>
-    <p v-if="queueStore.isSubscribed" class="current-ticket-label">
-      Current ticket
-    </p>
-    <p v-if="queueStore.isSubscribed" class="current-ticket">
-      {{ formattedCurrentTicket }}
-    </p>
-    <div id="divider" v-if="queueStore.isSubscribed">
-          <span class="dot"></span>
-          <hr>
-          <span class="dot"></span>
-        </div>
-    <button v-if="queueStore.isSubscribed" @click="leaveQueue()" class="exit-button">
-      Exit Line
-    </button>
-    <p class="client-turn" v-if="formattedCurrentTicket == formattedClientTicket">
-      IT'S YOUR TURN!!
-    </p>
-    <p v-if="queueStore.isSubscribed">
-      <img src="@/assets/logo.svg" class="logo" />
-    </p>
+      <p v-if="queueStore.isSubscribed" class="your-ticket-label grey font-wheight-600 text">Your ticket</p>
+      <p v-if="queueStore.isSubscribed" class="your-ticket">
+        {{ formattedClientTicket }}
+      </p>
+      <h2 v-if="queueStore.isSubscribed" class="selected-route">
+        {{ formattedRouteName }}
+      </h2>
+      <p v-if="queueStore.isSubscribed" class="current-ticket-label">
+        Current ticket
+      </p>
+      <p v-if="queueStore.isSubscribed" class="current-ticket">
+        {{ formattedCurrentTicket }}
+      </p>
+      <div id="divider" v-if="queueStore.isSubscribed">
+        <span class="dot"></span>
+        <hr>
+        <span class="dot"></span>
+      </div>
+      <button v-if="queueStore.isSubscribed" @click="leaveQueue()" class="exit-button">
+        Exit Line
+      </button>
+      <p class="client-turn" v-if="formattedCurrentTicket == formattedClientTicket">
+        IT'S YOUR TURN!!
+      </p>
+      <img src="@/assets/logo.png" class="logoSmall" v-if="queueStore.isSubscribed" />
     </div>
   </div>
 </template>
@@ -107,7 +105,7 @@ export default {
     //   // return `${routeCode}${this.queueStore.getLastTicketCalled.toString().padStart(2, "0")}`;
     // },
 
-    queueData(){
+    queueData() {
       return this.queueStore.getData
     }
   },
@@ -172,7 +170,7 @@ p {
   height: 100vh;
   display: flex;
   align-items: center;
-  justify-content: center;  
+  justify-content: center;
 }
 
 .unsubscribed {
@@ -191,9 +189,15 @@ p {
 }
 
 .logo {
-  width: 5rem;
-  padding-bottom: 3rem;
+  max-width: 30%;
+  max-height: 10%;
   text-align: center;
+}
+
+.logoSmall {
+  max-width: 20%;
+  max-height: 10%;
+  padding: 2%;
 }
 
 
@@ -246,28 +250,30 @@ p {
 }
 
 .your-ticket {
-  font-size: 4rem;
-  color: #20595f;
+  color: #307e69;
+  font-size: 80px;
+  font-weight: 900;
+  padding: 0;
   margin: 0;
-  font-weight: bolder;
 }
 
 .selected-route {
-  color: #20595f;
+  color: #307e69;
   font-size: 1.3rem;
+  text-align: center;
 }
 
 .current-ticket-label {
   color: #949983;
   margin-bottom: 0;
-  font-size: 14px;
+  margin-top: 2em;
 }
 
 .current-ticket {
-  font-size: 1.2rem;
-  color: #20595f;
-  margin-top: 0.5em;
-  font-weight: bold;
+  color: #949983;
+  margin-top: 0.4em;
+  font-size: 22px;
+  font-weight: bolder;
 }
 
 .dotted {
@@ -279,11 +285,29 @@ p {
   color: #d20505;
   background-color: #e7e8e3;
   border: 0;
-  width: 12rem;
+  width: 38%;
   min-height: 3rem;
   border-radius: 0.5rem;
   margin-bottom: 1rem;
   cursor: pointer;
+  font-weight: 700;
+  padding: 3%;
+}
+
+.text {
+  font-size: 22px;
+}
+
+.grey {
+  color: #949983;
+}
+
+.green {
+  color: #307E69;
+}
+
+.font-wheight-600 {
+  font-weight: 600;
 }
 
 #divider {
