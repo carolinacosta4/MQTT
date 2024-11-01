@@ -21,76 +21,17 @@ export default {
     data() {
         return {
             queueStore: useQueueStore(),
-            routes: [
-                { key: "internacional", name: "Internacional", code: "A" },
-                { key: "secretaria", name: "Secretaria", code: "B" },
-                { key: "direcao", name: "Direção", code: "C" },
-                { key: "centro-producao-recursos", name: "Centro de Produção e Recursos", code: "D" },
-                { key: "biblioteca", name: "Biblioteca", code: "E" },
-                { key: "servicos-acao-social", name: "Serviços de Ação Social", code: "F" },
-            ],
         };
     },
 
     computed: {
-        formattedClientTicket() {
-            const selectedRoute = this.routes.find(
-                (route) => route.key === this.queueStore.selectedRoute
-            );
-            const routeCode = selectedRoute ? selectedRoute.code : "";
-            return `${routeCode}${this.queueStore.currentClientTicket
-                .toString()
-                .padStart(2, "0")}`;
-        },
-
-        formattedCurrentTicket() {
-            const selectedRoute = this.routes.find(
-                (route) => route.key === this.queueStore.selectedRoute
-            );
-            const routeCode = selectedRoute ? selectedRoute.code : "";
-            const currentTicket = this.queueStore.sectors[this.queueStore.selectedRoute].currentTicket;
-            return `${routeCode}${currentTicket.toString().padStart(2, "0")}`;
-        },
-
-        formattedRouteName() {
-            return this.routes.find((route) => route.key === this.queueStore.selectedRoute).name
-        },
-
         queueData() {
             return this.queueStore.getData
         }
     },
 
-    methods: {
-        selectRoute(routeKey) {
-            this.queueStore.subscribeClient(routeKey);
-            this.queueStore.selectedRoute = routeKey;
-            this.queueStore.fetchQueueDataPerService(this.queueStore.selectedRoute);
-        },
-
-        leaveQueue() {
-            this.queueStore.leaveQueue(this.queueStore.selectedRoute, this.queueStore.currentClientTicket)
-        },
-    },
-
     mounted() {
-        if (!this.queueStore.connected) this.queueStore.connect();
-
         this.queueStore.fetchQueueData();
-
-        this.routes.forEach((route) => {
-            this.queueStore.fetchQueueDataPerService(route.key);
-        });
-    },
-
-    beforeUnmount() {
-        this.queueStore.disconnect();
-    },
-
-    watch: {
-        queueData() {
-            this.queueStore.fetchQueueData();
-        },
     },
 };
 </script>

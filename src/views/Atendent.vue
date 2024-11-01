@@ -137,12 +137,12 @@ export default {
   },
 
   methods: {
-    async finishService() {
-      await this.queueStore.finishService(this.queueStore.selectedRoute);
+    finishService() {
+      this.queueStore.finishService(this.queueStore.selectedRoute);
     },
 
-    async startService() {
-      await this.queueStore.startService(this.queueStore.selectedRoute);
+    startService() {
+      this.queueStore.startService(this.queueStore.selectedRoute);
     }
   },
 

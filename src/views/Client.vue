@@ -12,14 +12,6 @@
             {{ route.name }}
           </button>
         </div>
-
-        <!-- <div v-for="(route, key) in routes" :key="key">
-          <button @click="selectRoute(route.key)"
-            :class="['single-route', isServiceClosed(route.key) ? 'disabled' : '']"
-            :disabled="isServiceClosed(route.key)">
-            {{ route.name }}
-          </button>
-        </div> -->
       </div>
     </div>
   </div>
@@ -96,15 +88,6 @@ export default {
       return this.routes.find((route) => route.key === this.queueStore.selectedRoute).name
     },
 
-    // lastTicket() {
-    //   return this.queueStore.getLastTicketCalled
-    //   // const selectedRoute = this.routes.find(
-    //   //   (route) => route.key === this.queueStore.selectedRoute
-    //   // );
-    //   // const routeCode = selectedRoute ? selectedRoute.code : "";
-    //   // return `${routeCode}${this.queueStore.getLastTicketCalled.toString().padStart(2, "0")}`;
-    // },
-
     queueData() {
       return this.queueStore.getData
     }
@@ -120,11 +103,6 @@ export default {
     leaveQueue() {
       this.queueStore.leaveQueue(this.queueStore.selectedRoute, this.queueStore.currentClientTicket)
     },
-
-    // isServiceClosed(routeKey) {
-    //   return this.queueData.
-    //   return this.queueStore.sectors[routeKey]?.status !== 'open'
-    // }
   },
 
   mounted() {
