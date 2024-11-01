@@ -3,37 +3,44 @@
     <div id="left">
       <img class="logo" src="../assets/logo.svg" alt="">
       <div class="row space-between">
-        <h2 class="green">Services</h2>
+        <h2 class="green">Serviços</h2>
         <div class="row">
           <img class="icon" src="../assets/user.svg" alt="">
-          <p class="text"> {{ total }}</p>
+          <p class="text green"> {{ total }}</p>
         </div>
       </div>
       <div id="servicesList">
         <div v-for="(sector, key) in queueData">
-          <div class="row space-between paddingLR"
-            v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-            <p class="paddingLeft green">
-              {{ sector.name }}
-            </p>
-            <div class="row">
-              <img class="icon" src="../assets/user.svg" alt="">
-              <p> {{ sector.clients.length }}</p>
+          <router-link :to="{ params: { service: sector.code } }" id="link">
+            <div class="row space-between paddingLR"
+              v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute] && sector.code != this.$route.params.service">
+              <p class="paddingLeft green">{{ sector.name }}</p>
+              <div class="row">
+                <img class="icon" src="../assets/user.svg" alt="">
+                <p> {{ sector.clients.length }}</p>
+              </div>
             </div>
-          </div>
+            <div class="row space-between paddingLR selected"
+              v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute] && sector.code == this.$route.params.service">
+              <p class="paddingLeft green">{{ sector.name }}</p>
+              <div class="row">
+                <img class="icon" src="../assets/user.svg" alt="">
+                <p class="green">{{ sector.clients.length }}</p>
+              </div>
+            </div>
+          </router-link>
           <hr v-if="key != 'biblioteca'" class="servicesList">
         </div>
       </div>
 
-      <button id="finishServiceButton" @click="finishService" v-if="status == 'open'">Finish service</button>
-      <button id="startServiceButton" @click="startService" v-if="status == 'closed' && serviceQueue.length == 0">Start service</button>
-      <button id="serviceButton" @click="startService" v-if="status == 'closed' && serviceQueue.length != 0">You have to finish attending the clients</button>
+      <button id="finishServiceButton" @click="finishService" v-if="status == 'open'">Encerrar serviço</button>
+      <button id="startServiceButton" @click="startService" v-if="status == 'closed' && serviceQueue.length == 0">Iniciar serviço</button>
+      <button id="serviceButton" @click="startService" v-if="status == 'closed' && serviceQueue.length != 0">Termine de atender os clientes</button>
     </div>
-    {{serviceQueue}}
     <div id="right">
       <div id="ticketForm">
         <div id="upperPartTicket" class="centerPadding3">
-          <p class="grey font-wheight-600 text">Current ticket</p>
+          <p class="grey font-wheight-600 text">Senha atual</p>
           <p class="currentTicketNumber"
             v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
             {{ lastTicket }}
@@ -49,13 +56,13 @@
 
         <div id="bottomPartTicket" class="centerPadding4">
           <div id="minorButtons">
-            <button id="cancelButton" class="minorActionButton font-wheight-700">Cancel</button>
-            <button class="minorActionButton font-wheight-700">Recall</button>
+            <button id="cancelButton" class="minorActionButton font-wheight-700">Cancelar</button>
+            <button class="minorActionButton font-wheight-700">Chamar denovo</button>
           </div>
           <button id="nextTicketButton" class="font-wheight-700"
             v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]"
             @click="queueStore.callNextTicket(this.$route.params.service)" :disabled="!serviceQueue.length">
-            Next ticket
+            Próxima senha
           </button>
         </div>
       </div>
@@ -147,6 +154,14 @@ export default {
     queueData() {
       this.queueStore.fetchQueueData();
     },
+
+    '$route.params.service': {
+      immediate: true,
+      handler(newRoute) {
+        this.queueStore.subscribeToClients(newRoute);
+        this.queueStore.fetchQueueDataPerService(newRoute);
+      }
+    }
   },
 }
 </script>
@@ -291,6 +306,7 @@ hr {
   border: none;
   border-top: 6px dotted #307E69;
   width: 30vw;
+  margin: 0;
 }
 
 .centerPadding3 {
@@ -352,8 +368,6 @@ hr {
   justify-content: space-around;
   background-color: white;
   border-radius: 10px;
-  padding-top: 1%;
-  padding-bottom: 1%;
 }
 
 
@@ -416,5 +430,15 @@ hr.servicesList {
 
 .service {
   text-align: center;
+}
+
+#link {
+  text-decoration: none;
+  color: #307E69;
+}
+
+.selected{
+  background-color: #f5f5f5;
+  border-radius:10px;
 }
 </style>

@@ -1,8 +1,8 @@
 <template>
-  <div class="client-wrapper" v-if="!queueStore.isSubscribed">
+  <div class="client-wrapper unsubscribed" v-if="!queueStore.isSubscribed">
     <div class="client-div-unsubscribed">
       <img src="@/assets/logo.svg" class="logo" />
-      <h2 class="title">Select a service</h2>
+      <h2 class="title">Selecione um serviço</h2>
       <div class="all-routes">
         <div v-for="route in queueData">
           <button @click="selectRoute(route.code)" class="single-route" v-if="route.status == 'open'">
@@ -23,7 +23,7 @@
       </div>
     </div>
   </div>
-  <div v-else class="client-wrapper">
+  <div v-else class="client-wrapper subscribed">
     <div class="client-div-subscribed">
     <p v-if="queueStore.isSubscribed" class="your-ticket-label">Your ticket</p>
     <p v-if="queueStore.isSubscribed" class="your-ticket">
@@ -168,12 +168,19 @@ p {
 }
 
 .client-wrapper {
-  background-color: #307e69;
   width: 100vw;
   height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;  
+}
+
+.unsubscribed {
+  background-color: #f5f5f5;
+}
+
+.subscribed {
+  background-color: #307e69;
 }
 
 .client-div-unsubscribed {
@@ -191,7 +198,7 @@ p {
 
 
 .title {
-  color: #e7e8e3;
+  color: #307E69;
   text-align: center;
   margin-bottom: 5rem;
 }
@@ -209,8 +216,8 @@ p {
   height: 4rem;
   padding: 1rem;
   margin: 1rem;
-  background-color: #e7e8e3;
-  color: #307e69;
+  background-color: #307E69;
+  color: #E7E8E3;
   border: 0;
   border-radius: 1rem;
   font-weight: bold;
@@ -218,10 +225,9 @@ p {
 }
 
 .disabled {
-  background-color: #cccccc;
-  color: #8a8a8a;
+  background-color: #307E6960;
+  color: #E7E8E3;
   cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .client-div-subscribed {
