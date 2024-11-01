@@ -23,7 +23,6 @@ export const useQueueStore = defineStore("queueStore", {
     currentClientTicket: "",
     isSubscribed: false,
     queueService: [],
-    totalUsers: 0,
     lastTicketCalled: 0,
     status: null,
     queueData: {}
@@ -32,7 +31,6 @@ export const useQueueStore = defineStore("queueStore", {
   getters: {
     getData: (state) => state.queueData,
     getClients: (state) => state.queueService,
-    getTotal: (state) => state.totalUsers,
     getLastTicketCalled: (state) => state.lastTicketCalled,
     getStatus: (state) => state.status,
   },
@@ -80,17 +78,6 @@ export const useQueueStore = defineStore("queueStore", {
         const topic = `fila/${route}/senha_atual`;
         mqttService.publish(topic, response.nextTicket.toString());
         this.sectors[route].clients.shift();
-      } catch (error) {
-        console.error(error);
-      }
-    },
-
-    async fetchTotalUsers() {
-      try {
-        const response = await api.get(API_BASE_URL, `tickets`);
-        for (const key in response) {
-          this.totalUsers += response[key].clients.length;
-        }
       } catch (error) {
         console.error(error);
       }

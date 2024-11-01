@@ -34,8 +34,10 @@
       </div>
 
       <button id="finishServiceButton" @click="finishService" v-if="status == 'open'">Encerrar serviço</button>
-      <button id="startServiceButton" @click="startService" v-if="status == 'closed' && serviceQueue.length == 0">Iniciar serviço</button>
-      <button id="serviceButton" @click="startService" v-if="status == 'closed' && serviceQueue.length != 0">Termine de atender os clientes</button>
+      <button id="startServiceButton" @click="startService"
+        v-if="status == 'closed' && serviceQueue.length == 0">Iniciar serviço</button>
+      <button id="serviceButton" @click="startService" v-if="status == 'closed' && serviceQueue.length != 0">Termine de
+        atender os clientes</button>
     </div>
     <div id="right">
       <div id="ticketForm">
@@ -105,7 +107,6 @@ export default {
 
   created() {
     this.queueStore.fetchQueueDataPerService(this.$route.params.service);
-    this.queueStore.fetchTotalUsers();
     this.queueStore.fetchQueueData();
   },
 
@@ -115,7 +116,14 @@ export default {
     },
 
     total() {
-      return this.queueStore.getTotal
+      const uniqueClients = [];
+      for (const sector in this.queueData) {
+        for (const client of this.queueData[sector].clients) {
+          uniqueClients.push(client);
+        }
+      }
+
+      return uniqueClients.length;
     },
 
     lastTicket() {
@@ -224,7 +232,7 @@ p {
 
 img.logo {
   max-width: 50%;
-  max-height: 20%; 
+  max-height: 20%;
   margin-left: 25%;
 }
 
@@ -438,8 +446,8 @@ hr.servicesList {
   color: #307E69;
 }
 
-.selected{
+.selected {
   background-color: #f5f5f5;
-  border-radius:10px;
+  border-radius: 10px;
 }
 </style>
