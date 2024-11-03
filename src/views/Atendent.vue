@@ -112,7 +112,7 @@ export default {
       return uniqueClients.length;
     },
 
-    lastTicket() {
+    lastTicket() {      
       return `${this.serviceData.key}${this.queueStore.getLastTicketCalled.toString().padStart(2, "0")}`;
     },
 
@@ -128,7 +128,7 @@ export default {
       return this.queueStore.getData
     },
 
-    serviceData() {
+    serviceData() {      
       return this.queueStore.getServiceData
     }
   },

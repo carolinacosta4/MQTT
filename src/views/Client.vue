@@ -61,12 +61,12 @@ export default {
 
   computed: {
     formattedClientTicket() {
-      if (!this.queueStore.currentClientTicket || !this.serviceData.key) return "...";
+      if (!this.queueStore.currentClientTicket) return "...";
       return `${this.serviceData.key}${this.queueStore.currentClientTicket.toString().padStart(2, "0")}`;
     },
 
     formattedCurrentTicket() {
-      const currentTicket = this.queueStore.sectors[this.selectedRoute].currentTicket;     
+      const currentTicket = this.queueStore.sectors[this.selectedRoute].currentTicket;         
       if (!currentTicket && currentTicket != 0) return "...";
       return `${this.serviceData.key}${currentTicket.toString().padStart(2, "0")}`;
     },
@@ -79,7 +79,7 @@ export default {
       return this.queueStore.getData
     },
 
-    serviceData() {
+    serviceData() {      
       return this.queueStore.getServiceData
     }
   },
