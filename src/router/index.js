@@ -1,19 +1,25 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import ClientView from '../views/Client.vue'
-import AtendentView from '../views/Atendent.vue'
+import ClienteView from '../views/Client.vue'
+import AtendenteView from '../views/Atendent.vue'
+import AtendenteChooseView from '../views/AtendenteChooseView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/client',
-      name: 'client',
-      component: ClientView
+      path: '/cliente',
+      name: 'cliente',
+      component: ClienteView
     },
     {
-      path: '/atendent/:service',
-      name: 'atendent',
-      component: AtendentView
+      path: '/atendente/:service',
+      name: 'atendenteService',
+      component: AtendenteView
+    },
+    {
+      path: '/atendente',
+      name: 'atendente',
+      component: AtendenteChooseView
     }
   ]
 })

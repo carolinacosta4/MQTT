@@ -3,39 +3,45 @@
     <div id="left">
       <img class="logo" src="../assets/logo.png" alt="">
       <div class="row space-between">
-        <h2 class="green">Services</h2>
+        <h2 class="green">Serviços</h2>
         <div class="row">
           <img class="icon" src="../assets/user.svg" alt="">
-          <p class="text"> {{ total }}</p>
+          <p class="text green"> {{ total }}</p>
         </div>
       </div>
       <div id="servicesList">
         <div v-for="(sector, key) in queueData">
-          <div class="row space-between paddingLR"
-            v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
-            <p class="green">
-              {{ sector.name }}
-            </p>
-            <div class="row">
-              <img class="icon" src="../assets/user.svg" alt="">
-              <p> {{ sector.clients.length }}</p>
+          <router-link :to="{ params: { service: sector.code } }" id="link">
+            <div class="row space-between paddingLR" v-if="sector.code != this.$route.params.service">
+              <p class="green">{{ sector.name }}</p>
+              <div class="row">
+                <img class="icon" src="../assets/user.svg" alt="">
+                <p> {{ sector.clients.length }}</p>
+              </div>
             </div>
-          </div>
+            <div class="row space-between paddingLR selected" v-if="sector.code == this.$route.params.service">
+              <p class="paddingLeft green">{{ sector.name }}</p>
+              <div class="row">
+                <img class="icon" src="../assets/user.svg" alt="">
+                <p class="green">{{ sector.clients.length }}</p>
+              </div>
+            </div>
+          </router-link>
           <hr v-if="key != 'biblioteca'" class="servicesList">
         </div>
       </div>
 
-      <button id="finishServiceButton" @click="finishService" v-if="status == 'open'">Finish service</button>
-      <button id="startServiceButton" @click="startService" v-if="status == 'closed' && serviceQueue.length == 0">Start service</button>
-      <button id="serviceButton" @click="startService" v-if="status == 'closed' && serviceQueue.length != 0">You have to finish attending the clients</button>
+      <button id="finishServiceButton" @click="finishService" v-if="status == 'open'">Encerrar serviço</button>
+      <button id="startServiceButton" @click="startService"
+        v-if="status == 'closed' && serviceQueue.length == 0">Iniciar serviço</button>
+      <button id="serviceButton" @click="startService" v-if="status == 'closed' && serviceQueue.length != 0">Termine de
+        atender os clientes</button>
     </div>
-    {{serviceQueue}}
     <div id="right">
       <div id="ticketForm">
         <div id="upperPartTicket" class="centerPadding3">
-          <p class="grey font-wheight-600 text">Current ticket</p>
-          <p class="currentTicketNumber"
-            v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
+          <p class="grey font-wheight-600 text">Senha atual</p>
+          <p class="currentTicketNumber" v-if="this.$route.params.service">
             {{ lastTicket }}
           </p>
           <h2 class="green service">{{ formattedRouteName }}</h2>
@@ -49,13 +55,12 @@
 
         <div id="bottomPartTicket" class="centerPadding4">
           <div id="minorButtons">
-            <button id="cancelButton" class="minorActionButton font-wheight-700">Cancel</button>
-            <button class="minorActionButton font-wheight-700">Recall</button>
+            <button id="cancelButton" class="minorActionButton font-wheight-700">Cancelar</button>
+            <button class="minorActionButton font-wheight-700">Chamar denovo</button>
           </div>
-          <button id="nextTicketButton" class="font-wheight-700"
-            v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]"
+          <button id="nextTicketButton" class="font-wheight-700" v-if="this.$route.params.service"
             @click="queueStore.callNextTicket(this.$route.params.service)" :disabled="!serviceQueue.length">
-            Next ticket
+            Próxima senha
           </button>
         </div>
       </div>
@@ -70,14 +75,6 @@ export default {
   data() {
     return {
       queueStore: useQueueStore(),
-      routes: [
-        { key: "internacional", name: "Internacional", code: "A" },
-        { key: "secretaria", name: "Secretaria", code: "B" },
-        { key: "direcao", name: "Direção", code: "C" },
-        { key: "centro-producao-recursos", name: "Centro de Produção e Recursos", code: "D" },
-        { key: "biblioteca", name: "Biblioteca", code: "E" },
-        { key: "servicos-acao-social", name: "Serviços de Ação Social", code: "F" },
-      ],
     }
   },
 
@@ -87,7 +84,6 @@ export default {
 
     if (route) {
       this.queueStore.subscribeToClients(route);
-      this.queueStore.selectedRoute = route;
       this.queueStore.fetchQueueDataPerService(route)
     }
   },
@@ -98,7 +94,6 @@ export default {
 
   created() {
     this.queueStore.fetchQueueDataPerService(this.$route.params.service);
-    this.queueStore.fetchTotalUsers();
     this.queueStore.fetchQueueData();
   },
 
@@ -108,45 +103,62 @@ export default {
     },
 
     total() {
-      return this.queueStore.getTotal
+      const uniqueClients = [];
+      for (const sector in this.queueData) {
+        for (const client of this.queueData[sector].clients) {
+          uniqueClients.push(client);
+        }
+      }
+      return uniqueClients.length;
     },
 
-    lastTicket() {
-      const routeCode = this.routes.find((route) => route.key === this.queueStore.selectedRoute);
-      return `${routeCode.code}${this.queueStore.getLastTicketCalled.toString().padStart(2, "0")}`;
+    lastTicket() {      
+      return `${this.serviceData.key}${this.queueStore.getLastTicketCalled.toString().padStart(2, "0")}`;
     },
 
     formattedRouteName() {
-      return this.routes.find((route) => route.key === this.queueStore.selectedRoute).name
+      return this.serviceData.name
     },
 
     status() {
-      return this.queueStore.status
+      return this.queueStore.getStatus
     },
 
     queueData() {
       return this.queueStore.getData
     },
+
+    serviceData() {      
+      return this.queueStore.getServiceData
+    }
   },
 
   methods: {
-    async finishService() {
-      await this.queueStore.finishService(this.queueStore.selectedRoute);
+    finishService() {
+      this.queueStore.finishService(this.$route.params.service);
     },
 
-    async startService() {
-      await this.queueStore.startService(this.queueStore.selectedRoute);
+    startService() {
+      this.queueStore.startService(this.$route.params.service);
     }
   },
 
   watch: {
     serviceQueue() {
-      this.queueStore.fetchQueueDataPerService(this.queueStore.selectedRoute);
+      this.queueStore.fetchQueueDataPerService(this.$route.params.service);
     },
 
     queueData() {
       this.queueStore.fetchQueueData();
     },
+
+    '$route.params.service': {
+      immediate: true,
+      handler(newRoute) {
+        this.queueStore.subscribeToClients(newRoute);
+        this.queueStore.fetchQueueDataPerService(newRoute);
+      }
+    }
   },
 }
 </script>
@@ -154,8 +166,6 @@ export default {
 <style scoped>
 @font-face {
   font-family: "Karla";
-  /* font-style: normal; */
-  /* font-weight: 400; */
   src: url(https://fonts.gstatic.com/s/karla/v31/qkB9XvYC6trAT55ZBi1ueQVIjQTD-JrIH2G7nytkHRyQ8p4wUjm6bnEr.woff2) format('woff2');
 }
 
@@ -209,7 +219,7 @@ p {
 
 img.logo {
   max-width: 50%;
-  max-height: 20%; 
+  max-height: 20%;
   margin-left: 25%;
 }
 
@@ -292,6 +302,7 @@ hr {
   border: none;
   border-top: 6px dotted #307E69;
   width: 30vw;
+  margin: 0;
 }
 
 .centerPadding3 {
@@ -353,8 +364,6 @@ hr {
   justify-content: space-around;
   background-color: white;
   border-radius: 10px;
-  padding-top: 1%;
-  padding-bottom: 1%;
 }
 
 
@@ -398,7 +407,6 @@ hr.servicesList {
   width: 100%;
   border: none;
   border-radius: 100px;
-  /* background-color: #307E69; */
   color: black;
   margin-top: 8%;
   font-weight: 700;
@@ -417,5 +425,15 @@ hr.servicesList {
 
 .service {
   text-align: center;
+}
+
+#link {
+  text-decoration: none;
+  color: #307E69;
+}
+
+.selected {
+  background-color: #f5f5f5;
+  border-radius: 10px;
 }
 </style>

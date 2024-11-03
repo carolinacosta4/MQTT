@@ -32,8 +32,6 @@ export async function get(apiBaseUrl, endpoint) {
  * @param {*} data - this is the data that we will send to the server
  */
 
-
-// Buscar aqui a parte dos tokens
 export async function post(apiBaseUrl, endpoint, data) {
     try {
         const response = await fetch(`${apiBaseUrl}/${endpoint}`,
@@ -56,6 +54,7 @@ export async function post(apiBaseUrl, endpoint, data) {
  * @param {string} endpoint - this is the endpoint of the API
  * @returns a promise object with the response
  */
+
 export async function remove(apiBaseUrl, endpoint) {
     try {
         const response = await fetch(`${apiBaseUrl}/${endpoint}`, {

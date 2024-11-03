@@ -1,8 +1,8 @@
 <template>
-  <div class="client-wrapper" v-if="!queueStore.isSubscribed">
+  <div class="client-wrapper unsubscribed" v-if="!isSubscribed">
     <div class="client-div-unsubscribed">
       <img src="@/assets/logo.png" class="logo" />
-      <h2 class="title">Select a service</h2>
+      <h2 class="title">Selecione um serviço</h2>
       <div class="all-routes">
         <div v-for="route in queueData">
           <button @click="selectRoute(route.code)" class="single-route" v-if="route.status == 'open'">
@@ -12,44 +12,37 @@
             {{ route.name }}
           </button>
         </div>
-
-        <!-- <div v-for="(route, key) in routes" :key="key">
-          <button @click="selectRoute(route.key)"
-            :class="['single-route', isServiceClosed(route.key) ? 'disabled' : '']"
-            :disabled="isServiceClosed(route.key)">
-            {{ route.name }}
-          </button>
-        </div> -->
       </div>
     </div>
   </div>
-  <div v-else class="client-wrapper">
+  <div v-else class="client-wrapper subscribed">
     <div class="client-div-subscribed">
-      <p v-if="queueStore.isSubscribed" class="your-ticket-label grey font-wheight-600 text">Your ticket</p>
-      <p v-if="queueStore.isSubscribed" class="your-ticket">
+      <p class="your-ticket-label grey font-wheight-600 text">Your ticket</p>
+      <p v-if="formattedClientTicket" class="your-ticket">
         {{ formattedClientTicket }}
       </p>
-      <h2 v-if="queueStore.isSubscribed" class="selected-route">
+      <h2 class="selected-route">
         {{ formattedRouteName }}
       </h2>
-      <p v-if="queueStore.isSubscribed" class="current-ticket-label">
+      <p class="current-ticket-label">
         Current ticket
       </p>
-      <p v-if="queueStore.isSubscribed" class="current-ticket">
+      <p v-if="formattedCurrentTicket" class="current-ticket">
         {{ formattedCurrentTicket }}
       </p>
-      <div id="divider" v-if="queueStore.isSubscribed">
+      <div id="divider">
         <span class="dot"></span>
         <hr>
         <span class="dot"></span>
       </div>
-      <button v-if="queueStore.isSubscribed" @click="leaveQueue()" class="exit-button">
+      <button v-if="isSubscribed && formattedCurrentTicket != formattedClientTicket" @click="leaveQueue()"
+        class="exit-button">
         Exit Line
       </button>
       <p class="client-turn" v-if="formattedCurrentTicket == formattedClientTicket">
         IT'S YOUR TURN!!
       </p>
-      <img src="@/assets/logo.png" class="logoSmall" v-if="queueStore.isSubscribed" />
+      <img src="@/assets/logo.png" class="logoSmall" />
     </div>
   </div>
 </template>
@@ -61,80 +54,53 @@ export default {
   data() {
     return {
       queueStore: useQueueStore(),
-      routes: [
-        { key: "internacional", name: "Internacional", code: "A" },
-        { key: "secretaria", name: "Secretaria", code: "B" },
-        { key: "direcao", name: "Direção", code: "C" },
-        { key: "centro-producao-recursos", name: "Centro de Produção e Recursos", code: "D" },
-        { key: "biblioteca", name: "Biblioteca", code: "E" },
-        { key: "servicos-acao-social", name: "Serviços de Ação Social", code: "F" },
-      ],
+      selectedRoute: "",
+      isSubscribed: false
     };
   },
 
   computed: {
     formattedClientTicket() {
-      const selectedRoute = this.routes.find(
-        (route) => route.key === this.queueStore.selectedRoute
-      );
-      const routeCode = selectedRoute ? selectedRoute.code : "";
-      return `${routeCode}${this.queueStore.currentClientTicket
-        .toString()
-        .padStart(2, "0")}`;
+      if (!this.queueStore.currentClientTicket) return "...";
+      return `${this.serviceData.key}${this.queueStore.currentClientTicket.toString().padStart(2, "0")}`;
     },
 
     formattedCurrentTicket() {
-      const selectedRoute = this.routes.find(
-        (route) => route.key === this.queueStore.selectedRoute
-      );
-      const routeCode = selectedRoute ? selectedRoute.code : "";
-      const currentTicket = this.queueStore.sectors[this.queueStore.selectedRoute].currentTicket;
-      return `${routeCode}${currentTicket.toString().padStart(2, "0")}`;
+      const currentTicket = this.queueStore.sectors[this.selectedRoute].currentTicket;         
+      if (!currentTicket && currentTicket != 0) return "...";
+      return `${this.serviceData.key}${currentTicket.toString().padStart(2, "0")}`;
     },
 
     formattedRouteName() {
-      return this.routes.find((route) => route.key === this.queueStore.selectedRoute).name
+      return this.serviceData.name
     },
-
-    // lastTicket() {
-    //   return this.queueStore.getLastTicketCalled
-    //   // const selectedRoute = this.routes.find(
-    //   //   (route) => route.key === this.queueStore.selectedRoute
-    //   // );
-    //   // const routeCode = selectedRoute ? selectedRoute.code : "";
-    //   // return `${routeCode}${this.queueStore.getLastTicketCalled.toString().padStart(2, "0")}`;
-    // },
 
     queueData() {
       return this.queueStore.getData
+    },
+
+    serviceData() {      
+      return this.queueStore.getServiceData
     }
   },
 
   methods: {
     selectRoute(routeKey) {
       this.queueStore.subscribeClient(routeKey);
-      this.queueStore.selectedRoute = routeKey;
-      this.queueStore.fetchQueueDataPerService(this.queueStore.selectedRoute);
+      this.selectedRoute = routeKey;
+      this.queueStore.fetchQueueDataPerService(this.selectedRoute);
+      this.isSubscribed = true
     },
 
-    leaveQueue() {
-      this.queueStore.leaveQueue(this.queueStore.selectedRoute, this.queueStore.currentClientTicket)
+    leaveQueue() {     
+      this.queueStore.leaveQueue(this.selectedRoute, this.queueStore.currentClientTicket)
+      this.isSubscribed = false
     },
-
-    // isServiceClosed(routeKey) {
-    //   return this.queueData.
-    //   return this.queueStore.sectors[routeKey]?.status !== 'open'
-    // }
   },
 
   mounted() {
     if (!this.queueStore.connected) this.queueStore.connect();
-
     this.queueStore.fetchQueueData();
-
-    this.routes.forEach((route) => {
-      this.queueStore.fetchQueueDataPerService(route.key);
-    });
   },
 
   beforeUnmount() {
@@ -152,8 +118,6 @@ export default {
 <style scoped>
 @font-face {
   font-family: "Karla";
-  /* font-style: normal; */
-  /* font-weight: 400; */
   src: url(https://fonts.gstatic.com/s/karla/v31/qkB9XvYC6trAT55ZBi1ueQVIjQTD-JrIH2G7nytkHRyQ8p4wUjm6bnEr.woff2) format('woff2');
 }
 
@@ -166,12 +130,19 @@ p {
 }
 
 .client-wrapper {
-  background-color: #307e69;
   width: 100vw;
   height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.unsubscribed {
+  background-color: #f5f5f5;
+}
+
+.subscribed {
+  background-color: #307e69;
 }
 
 .client-div-unsubscribed {
@@ -195,7 +166,7 @@ p {
 
 
 .title {
-  color: #e7e8e3;
+  color: #307E69;
   text-align: center;
   margin-bottom: 5rem;
 }
@@ -213,8 +184,8 @@ p {
   height: 4rem;
   padding: 1rem;
   margin: 1rem;
-  background-color: #e7e8e3;
-  color: #307e69;
+  background-color: #307E69;
+  color: #E7E8E3;
   border: 0;
   border-radius: 1rem;
   font-weight: bold;
@@ -222,10 +193,9 @@ p {
 }
 
 .disabled {
-  background-color: #cccccc;
-  color: #8a8a8a;
+  background-color: #307E6960;
+  color: #E7E8E3;
   cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .client-div-subscribed {
@@ -234,8 +204,6 @@ p {
   align-items: center;
   background-color: #ffffff;
   border-radius: 1.5em;
-  /* width: 35rem; */
-  /* height: 45rem; */
 }
 
 .your-ticket-label {
