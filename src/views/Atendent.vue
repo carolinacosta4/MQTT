@@ -12,16 +12,14 @@
       <div id="servicesList">
         <div v-for="(sector, key) in queueData">
           <router-link :to="{ params: { service: sector.code } }" id="link">
-            <div class="row space-between paddingLR"
-              v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute] && sector.code != this.$route.params.service">
+            <div class="row space-between paddingLR" v-if="sector.code != this.$route.params.service">
               <p class="green">{{ sector.name }}</p>
               <div class="row">
                 <img class="icon" src="../assets/user.svg" alt="">
                 <p> {{ sector.clients.length }}</p>
               </div>
             </div>
-            <div class="row space-between paddingLR selected"
-              v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute] && sector.code == this.$route.params.service">
+            <div class="row space-between paddingLR selected" v-if="sector.code == this.$route.params.service">
               <p class="paddingLeft green">{{ sector.name }}</p>
               <div class="row">
                 <img class="icon" src="../assets/user.svg" alt="">
@@ -43,8 +41,7 @@
       <div id="ticketForm">
         <div id="upperPartTicket" class="centerPadding3">
           <p class="grey font-wheight-600 text">Senha atual</p>
-          <p class="currentTicketNumber"
-            v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]">
+          <p class="currentTicketNumber" v-if="this.$route.params.service">
             {{ lastTicket }}
           </p>
           <h2 class="green service">{{ formattedRouteName }}</h2>
@@ -61,8 +58,7 @@
             <button id="cancelButton" class="minorActionButton font-wheight-700">Cancelar</button>
             <button class="minorActionButton font-wheight-700">Chamar denovo</button>
           </div>
-          <button id="nextTicketButton" class="font-wheight-700"
-            v-if="queueStore.selectedRoute && queueStore.sectors[queueStore.selectedRoute]"
+          <button id="nextTicketButton" class="font-wheight-700" v-if="this.$route.params.service"
             @click="queueStore.callNextTicket(this.$route.params.service)" :disabled="!serviceQueue.length">
             Próxima senha
           </button>
@@ -79,14 +75,6 @@ export default {
   data() {
     return {
       queueStore: useQueueStore(),
-      routes: [
-        { key: "internacional", name: "Internacional", code: "A" },
-        { key: "secretaria", name: "Secretaria", code: "B" },
-        { key: "direcao", name: "Direção", code: "C" },
-        { key: "centro-producao-recursos", name: "Centro de Produção e Recursos", code: "D" },
-        { key: "biblioteca", name: "Biblioteca", code: "E" },
-        { key: "servicos-acao-social", name: "Serviços de Ação Social", code: "F" },
-      ],
     }
   },
 
@@ -96,7 +84,6 @@ export default {
 
     if (route) {
       this.queueStore.subscribeToClients(route);
-      this.queueStore.selectedRoute = route;
       this.queueStore.fetchQueueDataPerService(route)
     }
   },
@@ -122,41 +109,43 @@ export default {
           uniqueClients.push(client);
         }
       }
-
       return uniqueClients.length;
     },
 
     lastTicket() {
-      const routeCode = this.routes.find((route) => route.key === this.queueStore.selectedRoute);
-      return `${routeCode.code}${this.queueStore.getLastTicketCalled.toString().padStart(2, "0")}`;
+      return `${this.serviceData.key}${this.queueStore.getLastTicketCalled.toString().padStart(2, "0")}`;
     },
 
     formattedRouteName() {
-      return this.routes.find((route) => route.key === this.queueStore.selectedRoute).name
+      return this.serviceData.name
     },
 
     status() {
-      return this.queueStore.status
+      return this.queueStore.getStatus
     },
 
     queueData() {
       return this.queueStore.getData
     },
+
+    serviceData() {
+      return this.queueStore.getServiceData
+    }
   },
 
   methods: {
     finishService() {
-      this.queueStore.finishService(this.queueStore.selectedRoute);
+      this.queueStore.finishService(this.$route.params.service);
     },
 
     startService() {
-      this.queueStore.startService(this.queueStore.selectedRoute);
+      this.queueStore.startService(this.$route.params.service);
     }
   },
 
   watch: {
     serviceQueue() {
-      this.queueStore.fetchQueueDataPerService(this.queueStore.selectedRoute);
+      this.queueStore.fetchQueueDataPerService(this.$route.params.service);
     },
 
     queueData() {
@@ -177,8 +166,6 @@ export default {
 <style scoped>
 @font-face {
   font-family: "Karla";
-  /* font-style: normal; */
-  /* font-weight: 400; */
   src: url(https://fonts.gstatic.com/s/karla/v31/qkB9XvYC6trAT55ZBi1ueQVIjQTD-JrIH2G7nytkHRyQ8p4wUjm6bnEr.woff2) format('woff2');
 }
 
@@ -420,7 +407,6 @@ hr.servicesList {
   width: 100%;
   border: none;
   border-radius: 100px;
-  /* background-color: #307E69; */
   color: black;
   margin-top: 8%;
   font-weight: 700;

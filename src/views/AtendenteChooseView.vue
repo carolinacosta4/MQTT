@@ -39,8 +39,6 @@ export default {
 <style scoped>
 @font-face {
     font-family: "Karla";
-    /* font-style: normal; */
-    /* font-weight: 400; */
     src: url(https://fonts.gstatic.com/s/karla/v31/qkB9XvYC6trAT55ZBi1ueQVIjQTD-JrIH2G7nytkHRyQ8p4wUjm6bnEr.woff2) format('woff2');
 }
 

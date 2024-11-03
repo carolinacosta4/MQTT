@@ -8,24 +8,19 @@ export const useQueueStore = defineStore("queueStore", {
   state: () => ({
     connected: false,
     sectors: {
-      internacional: { clients: [], currentTicket: 0, status: "open" },
-      secretaria: { clients: [], currentTicket: 0, status: "open" },
-      direcao: { clients: [], currentTicket: 0, status: "open" },
-      "centro-producao-recursos": {
-        clients: [],
-        currentTicket: 0,
-        status: "open",
-      },
-      biblioteca: { clients: [], currentTicket: 0, status: "open" },
-      "servicos-acao-social": { clients: [], currentTicket: 0, status: "open" },
+      internacional: { currentTicket: 0 },
+      secretaria: { currentTicket: 0 },
+      direcao: { currentTicket: 0 },
+      "centro-producao-recursos": { currentTicket: 0 },
+      biblioteca: { currentTicket: 0 },
+      "servicos-acao-social": { currentTicket: 0 },
     },
-    selectedRoute: "",
     currentClientTicket: "",
-    isSubscribed: false,
     queueService: [],
     lastTicketCalled: 0,
+    queueData: {},
     status: null,
-    queueData: {}
+    serviceData: {}
   }),
 
   getters: {
@@ -33,6 +28,7 @@ export const useQueueStore = defineStore("queueStore", {
     getClients: (state) => state.queueService,
     getLastTicketCalled: (state) => state.lastTicketCalled,
     getStatus: (state) => state.status,
+    getServiceData: (state) => state.serviceData
   },
 
   actions: {
@@ -48,7 +44,6 @@ export const useQueueStore = defineStore("queueStore", {
     },
 
     async subscribeClient(route) {
-      this.selectedRoute = route;
       try {
         const response = await api.post(API_BASE_URL, `tickets/issue`, {
           route: route,
@@ -56,14 +51,10 @@ export const useQueueStore = defineStore("queueStore", {
 
         const clientTicket = response.ticketNumber;
         this.currentClientTicket = clientTicket;
-        this.sectors[route].clients.push(clientTicket);
-
         const topic = `fila/${route}/senha_atual`;
         mqttService.subscribe(topic, (message) => {
           this.sectors[route].currentTicket = parseInt(message);
         });
-
-        this.isSubscribed = true;
       } catch (error) {
         console.error(error);
       }
@@ -77,7 +68,6 @@ export const useQueueStore = defineStore("queueStore", {
         this.sectors[route].currentTicket = response.nextTicket;
         const topic = `fila/${route}/senha_atual`;
         mqttService.publish(topic, response.nextTicket.toString());
-        this.sectors[route].clients.shift();
       } catch (error) {
         console.error(error);
       }
@@ -86,8 +76,7 @@ export const useQueueStore = defineStore("queueStore", {
     async fetchQueueData() {
       try {
         const response = await api.get(API_BASE_URL, `tickets`);
-        this.queueData = response
-        
+        this.queueData = response;
         return response;
       } catch (error) {
         console.error(error);
@@ -100,9 +89,8 @@ export const useQueueStore = defineStore("queueStore", {
         this.queueService = response.clients;
         this.lastTicketCalled = response.lastTicket;
         this.status = response.status;
-        this.sectors[route].clients = response.clients;
+        this.serviceData = response
         this.sectors[route].currentTicket = response.lastTicket;
-        this.sectors[route].status = response.status;
         return response;
       } catch (error) {
         console.error(error);
@@ -110,7 +98,6 @@ export const useQueueStore = defineStore("queueStore", {
     },
 
     subscribeToClients(route) {
-      this.selectedRoute = route;
       const clientTopic = `fila/${route}/senha_cliente`;
       mqttService.subscribe(clientTopic, (message) => {
         this.sectors[route].clients.push(parseInt(message));
@@ -119,20 +106,14 @@ export const useQueueStore = defineStore("queueStore", {
 
     async leaveQueue(route, ticketNumber) {
       try {
-        const response = await api.post(
+        const response = await api.remove(
           API_BASE_URL,
-          `tickets/leaveQueue/${route}`,
-          {
-            ticketNumber: ticketNumber,
-          }
+          `tickets/leaveQueue/${route}/${ticketNumber}`
         );
 
         const topic = `fila/${route}/senha_atual`;
         mqttService.unsubscribe(topic);
-        this.isSubscribed = false;
-        this.selectedRoute = "";
         this.currentClientTicket = "";
-
         return response;
       } catch (error) {
         console.error(error);
@@ -145,7 +126,6 @@ export const useQueueStore = defineStore("queueStore", {
           API_BASE_URL,
           `tickets/finishService/${route}`
         );
-        this.sectors[route].status = 'closed'
         return response;
       } catch (error) {
         console.error(`Erro ao finalizar o serviço para ${route}:`, error);
@@ -158,8 +138,6 @@ export const useQueueStore = defineStore("queueStore", {
           API_BASE_URL,
           `tickets/startService/${route}`
         );
-        this.sectors[route].status = 'open'
-
         return response;
       } catch (error) {
         console.error(`Erro ao finalizar o serviço para ${route}:`, error);
